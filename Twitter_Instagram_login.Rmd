@@ -2,7 +2,7 @@
 title: "Twitter_Instagram"
 output: html_document
 ---
-Twitter Code
+Twitter code:
 ```{r}
 require(twitteR)
 require(qdap)
@@ -18,7 +18,7 @@ setup_twitter_oauth(consumerKey, consumerSecret, access_token, access_secret)
 
 x <- userTimeline('NatGeo', n=3200)
 ```
-Instagram code
+Instagram code:
 ```{r}
 app_name <- "Math 154 Class Project"
 client_id <- "d4ee8a29a9794a34a91968569f34da70"
