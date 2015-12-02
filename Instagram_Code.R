@@ -37,12 +37,13 @@ natgeo_profile <- user_info$data[[1]]
 
 natgeo_id = 787132
 
-media111915 <- fromJSON(getURL(paste('https://api.instagram.com/v1/users/',natgeo_id,'/media/recent/?access_token=',token,sep="")))
+media112615 <- fromJSON(getURL(paste('https://api.instagram.com/v1/users/',natgeo_id,'/media/recent/?access_token=',token,sep="")))
 
-save(media111915,file = "media(11-19-15).saved")
+save(media112615,file = "natgeo_11-26-15.saved")
 #Most recent post
 df = media$data[[1]]
 #filenames = media(11-??-??).saved
+
 df$caption$text
 df$likes$count
 df$tags

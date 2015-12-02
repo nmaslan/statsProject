@@ -20,6 +20,10 @@ x <- userTimeline('NatGeo', n=3200)
 ```
 Instagram code:
 ```{r}
+require(httr)
+require(httpuv)
+require(RJSONIO)
+require(RCurl)
 app_name <- "Math 154 Class Project"
 client_id <- "d4ee8a29a9794a34a91968569f34da70"
 client_secret <- "9cf6bcad38d6414198337e6bcfc2fdfe"
@@ -36,6 +40,8 @@ ig_oauth <- oauth2.0_token(instagram, myapp, scope="basic", type = "application/
 tmp <- strsplit(toString(names(ig_oauth$credentials)),
 '"')
 token <- tmp[[1]][4]
+
+token <- "2265916529.d4ee8a2.47a770d5e52f4e958a90cd0ba7cff0dc"
 
 username <- "natgeo"
 user_info <- fromJSON(getURL(paste('https://api.instagram.com/v1/users/search?q=',

@@ -1,8 +1,9 @@
-Sources from http://thinktostart.com/analyze-instagram-r/
-  https://cran.r-project.org/doc/contrib/de_Jonge+van_der_Loo-Introduction_to_data_cleaning_with_R.pdf
+#Sources from http://thinktostart.com/analyze-instagram-r/
+#https://cran.r-project.org/doc/contrib/de_Jonge+van_der_Loo-Introduction_to_data_cleaning_with_R.pdf
 
 require(dplyr)
 require(sentiment)
+require(plyr)
 
 load("statsProject/natgeo_11-13-15.saved")
 load("statsProject/natgeo_11-14-15.saved")
@@ -229,5 +230,113 @@ df.2$caption <- gsub("#", "", df.2$caption)
 df.2$caption <- gsub("//", "", df.2$caption)
 
 #Sentiment Analysis 
+#Source: http://andybromberg.com/sentiment-analysis/
+#Source: Positive Words https://github.com/williamgunn/SciSentiment/blob/master/positive-words.txt
+#Source: Negative Words https://github.com/jeffreybreen/twitter-sentiment-analysis-tutorial-201107/blob/master/data/opinion-lexicon-English/negative-words.txt
+require(stringr)
+# Additional Positive and Negative Words 
+positiveText <- read.delim(file = '~/statsProject/Positive Words.txt', header=FALSE, stringsAsFactors = FALSE)
+positiveText <- positiveText$V1
+positiveText <- unlist(lapply(positiveText, function(x) { str_split(x, "\n")}))
+positiveText <- gsub("\\\\", "", positiveText)
+positiveText <- positiveText[7:2011]
+negativeText <- read.delim(file = '~/statsProject/Negative Words.txt', header=FALSE, stringsAsFactors = FALSE)
+negativeText <- negativeText$V1
+negativeText <- unlist(lapply(negativeText, function(x) { str_split(x, "\n")}))
+negativeText <- gsub("\\\\", "", negativeText)
+negativeText <- negativeText[14:4794]
+#
+
+afinn_list <- read.delim(file= '~/statsProject/AFINN-111.txt', header=FALSE, stringsAsFactors = FALSE)
+names(afinn_list) <- c('word', 'score')
+afinn_list$word <- tolower(afinn_list$word)
+
+vNegTerms <- afinn_list$word[afinn_list$score==-5 | afinn_list$score==-4]
+negTerms <- c(afinn_list$word[afinn_list$score==-3 | afinn_list$score==-2 | afinn_list$score==-1])
+posTerms <- c(afinn_list$word[afinn_list$score==3 | afinn_list$score==2 | afinn_list$score==1])
+vPosTerms <- afinn_list$word[afinn_list$score==5 | afinn_list$score==4]
+
+#
+sentimentScore <- function(sentences, vNegTerms, negTerms, posTerms, vPosTerms){
+  final_scores <- matrix('',0,5)
+  scores <- laply(sentences, function(sentence, vNegTerms, negTerms, posTerms, vPosTerms){
+    initial_sentence <- sentence
+    sentence <- gsub("[[:punct:]]","", sentence)
+    sentence <- gsub("[[:cntrl:]]","", sentence)
+    sentence <- gsub("\\d+","", sentence)
+    sentence <- tolower(sentence)
+    wordList <- str_split(sentence, '\\s+')
+    words <- unlist(wordList)
+    #Match positive and negative Terms 
+    vPosMatches <- match(words, vPosTerms)
+    posMatches <- match(words, posTerms)
+    vNegMatches <- match(words, vNegTerms)
+    negMatches <- match(words,negTerms)
+    # Sum up the matches 
+    vPosMatches <- sum(!is.na(vPosMatches))
+    posMatches <- sum(!is.na(posMatches))
+    vNegMatches <- sum(!is.na(vNegMatches))
+    negMatches <- sum(!is.na(negMatches))
+    #score <- c(vNegMatches, negMatches, posMatches, vPosMatches)
+    # Add rows 
+    #newrow <- c(initial_sentence, score)
+    #final_scores <- rbind(final_scores, newrow)
+    final_score <- -2*vNegMatches - negMatches + posMatches + 2*vPosMatches
+    return(final_score)
+  }, vNegTerms,negTerms,posTerms,vPosTerms)
+  return(scores)
+}#
+#Sentiment Score calculator Taken primarily from source 
+sentimentScore <- function(sentence, vNegTerms, negTerms, posTerms, vPosTerms){
+    initial_sentence <- sentence
+    sentence <- gsub("[[:punct:]]","", sentence)
+    sentence <- gsub("[[:cntrl:]]","", sentence)
+    sentence <- gsub("\\d+","", sentence)
+    sentence <- tolower(sentence)
+    wordList <- str_split(sentence, '\\s+')
+    words <- unlist(wordList)
+    #Match positive and negative Terms 
+    vPosMatches <- match(words, vPosTerms)
+    posMatches <- match(words, posTerms)
+    vNegMatches <- match(words, vNegTerms)
+    negMatches <- match(words,negTerms)
+    # Sum up the matches 
+    vPosMatches <- sum(!is.na(vPosMatches))
+    posMatches <- sum(!is.na(posMatches))
+    vNegMatches <- sum(!is.na(vNegMatches))
+    negMatches <- sum(!is.na(negMatches))
+    #score <- c(vNegMatches, negMatches, posMatches, vPosMatches)
+    # Add rows 
+    #newrow <- c(initial_sentence, score)
+    #final_scores <- rbind(final_scores, newrow)
+    final_score <- -vNegMatches - negMatches + posMatches + vPosMatches
+    return(final_score)
+}
+
+#Add in sentiment scores 
+  for(i in 1:nrow(df.2)){
+      df.2$Sentiment_Score[i] <- sentimentScore(df.2$caption[i],vNegTerms,negTerms,posTerms,vPosTerms)
+  }
+
+df.2$Sentiment_Score
+
+
+#Add AM/PM variable 
+
+  for(i in 1:nrow(df.2)){
+    if(as.numeric(substr(df.2$date[i],11,13))>=12){
+      df.2$Time[i] <- "PM"
+    } 
+    else{
+      df.2$Time[i] <- "AM"
+    }
+  }
+#Add in popularity score 
+
+for(i in 1:nrow(df.2)){
+  df.2$Popularity_Score[i] <- df.2$likes[i] + 50*df.2$comments[i]
+}
 
 #install.packages(sentiment,repos = "http://www.omegahat.org/R)
+require(randomForest)
+model.1 <- randomForest(Popularity_Score~time+Sentiment_Score,data=df.2, mtry=2, importance=TRUE)
