@@ -1,0 +1,1 @@
+findFreqTerms(dtm, lowfreq=1000)
