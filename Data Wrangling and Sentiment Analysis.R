@@ -5,15 +5,15 @@ require(dplyr)
 require(sentiment)
 require(plyr)
 
-load("statsProject/natgeo_11-13-15.saved")
-load("statsProject/natgeo_11-14-15.saved")
-load("statsProject/natgeo_11-15-15.saved")
-load("statsProject/natgeo_11-16-15.saved")
-load("statsProject/natgeo_11-17-15.saved")
-load("statsProject/natgeo_11-19-15.saved")
-load("statsProject/natgeo_11-22-15.saved")
-load("statsProject/natgeo_11-23-15.saved")
-load("statsProject/natgeo_11-26-15.saved")
+load("natgeo_11-13-15.saved")
+load("natgeo_11-14-15.saved")
+load("natgeo_11-15-15.saved")
+load("natgeo_11-16-15.saved")
+load("natgeo_11-17-15.saved")
+load("natgeo_11-19-15.saved")
+load("natgeo_11-22-15.saved")
+load("natgeo_11-23-15.saved")
+load("natgeo_11-26-15.saved")
 
 df13 <- data.frame(no = 1:length(media$data))
 
@@ -71,8 +71,6 @@ for(i in 1:length(media111515$data)){
   df15$time[i] <- media111515$data[[i]]$created_time
 }
 
-df16 <- data.frame(no = 1:length(media111615$data))
-
 for(i in 1:length(media111515$data)){
   # # of comments 
   df16$comments[i] <- media111615$data[[i]]$comments$count
@@ -119,8 +117,11 @@ for(i in 1:length(media111915$data)){
   # # of likes
   df19$likes[i] <- media111915$data[[i]]$likes$count
   
-  # # 
+  # # data
   df19$date[i] <- toString(as.POSIXct(as.numeric(media111915$data[[i]]$created_time), origin="1970-01-01"))
+  
+  # caption
+  df19$caption[i] <- media111915$data[[i]]$caption$text
   
   # date
   df19$time[i] <- media111915$data[[i]]$created_time
@@ -145,10 +146,8 @@ for(i in 1:length(media112215$data)){
   # date
   df22$time[i] <- media112215$data[[i]]$created_time
 }
-
-
-df23 <- data.frame(no = 1:length(media112315$data))
-
+  
+  # # of 
 for(i in 1:length(media112315$data)){
   # # of comments 
   df23$comments[i] <- media112315$data[[i]]$comments$count
@@ -156,13 +155,13 @@ for(i in 1:length(media112315$data)){
   # # of likes
   df23$likes[i] <- media112315$data[[i]]$likes$count
   
-  # 
+  # date
   df23$date[i] <- toString(as.POSIXct(as.numeric(media112315$data[[i]]$created_time), origin="1970-01-01"))
   
   # caption
   df23$caption[i] <- media112315$data[[i]]$caption$text
   
-  # date
+  # time
   df23$time[i] <- media112315$data[[i]]$created_time
 }
 
@@ -229,25 +228,29 @@ df.2$caption <- gsub("#", "", df.2$caption)
 
 df.2$caption <- gsub("//", "", df.2$caption)
 
+#SAVE df.2
+
+
 #Sentiment Analysis 
 #Source: http://andybromberg.com/sentiment-analysis/
 #Source: Positive Words https://github.com/williamgunn/SciSentiment/blob/master/positive-words.txt
 #Source: Negative Words https://github.com/jeffreybreen/twitter-sentiment-analysis-tutorial-201107/blob/master/data/opinion-lexicon-English/negative-words.txt
 require(stringr)
 # Additional Positive and Negative Words 
-positiveText <- read.delim(file = '~/statsProject/Positive Words.txt', header=FALSE, stringsAsFactors = FALSE)
+# clean up text
+positiveText <- read.delim(file = 'Positive Words.txt', header=FALSE, stringsAsFactors = FALSE)
 positiveText <- positiveText$V1
 positiveText <- unlist(lapply(positiveText, function(x) { str_split(x, "\n")}))
 positiveText <- gsub("\\\\", "", positiveText)
 positiveText <- positiveText[7:2011]
-negativeText <- read.delim(file = '~/statsProject/Negative Words.txt', header=FALSE, stringsAsFactors = FALSE)
+negativeText <- read.delim(file = 'Negative Words.txt', header=FALSE, stringsAsFactors = FALSE)
 negativeText <- negativeText$V1
 negativeText <- unlist(lapply(negativeText, function(x) { str_split(x, "\n")}))
 negativeText <- gsub("\\\\", "", negativeText)
 negativeText <- negativeText[14:4794]
 #
 
-afinn_list <- read.delim(file= '~/statsProject/AFINN-111.txt', header=FALSE, stringsAsFactors = FALSE)
+afinn_list <- read.delim(file= 'AFINN-111.txt', header=FALSE, stringsAsFactors = FALSE)
 names(afinn_list) <- c('word', 'score')
 afinn_list$word <- tolower(afinn_list$word)
 
@@ -337,6 +340,10 @@ for(i in 1:nrow(df.2)){
   df.2$Popularity_Score[i] <- df.2$likes[i] + 50*df.2$comments[i]
 }
 
+#save df.2
+write.table(df.2, file = "df.2.csv")
+write.csv(df.2, file = "df.2.csv")
+
 #install.packages(sentiment,repos = "http://www.omegahat.org/R)
 require(randomForest)
-model.1 <- randomForest(Popularity_Score~time+Sentiment_Score,data=df.2, mtry=2, importance=TRUE)
+model.1 <- randomForest(Popularity_Score~time+Sentiment_Score,data=df.2, mtry=4, importance=TRUE)
