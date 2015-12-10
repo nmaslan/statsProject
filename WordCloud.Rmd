@@ -1,0 +1,43 @@
+---
+title: "Untitled"
+output: html_document
+---
+
+```{r}
+library(NLP)
+library(openNLP)
+library(openNLPmodels.en)
+library(tm)
+library(stringr)
+library(gsubfn)
+library(plyr)
+library(koRpus)
+library(wordcloud)
+
+#import df.2
+read.csv("df.2.csv")
+
+# combining all the posts together
+all_posts <- paste(df.2$caption, collapse="")
+
+#setting up source and corpus
+post_source <- VectorSource(all_posts)
+corpus <- Corpus(post_source)
+
+#cleaning - remove stopwords
+corpus <- tm_map(corpus, removeWords, stopwords("english"))
+
+#Making a document-term matrix
+dtm <- DocumentTermMatrix(corpus)
+dtm2 <- as.matrix(dtm)
+
+#finding frequency of terms
+frequency <- colSums(dtm2)
+frequency <- sort(frequency, decreasing=TRUE)
+
+words <- names(frequency)
+wordcloud(words[1:50], frequency[1:50])
+
+#look at word lcouds of popularity 
+df.2 <- arrange(df.2, desc(Popularity_Score))
+
