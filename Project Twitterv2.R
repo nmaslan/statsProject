@@ -132,9 +132,9 @@ dft.1$Popularity_Score[i] <- dft.1$favoriteCount[i] + 2*dft.1$retweetCount[i]
 }    
 
 for(i in 1:nrow(dft.1)){
-  dft.1$Word_Count[i] <- word.count(dft.1$text[i])
+  dft.1$Word_Count[i] <- sapply(gregexpr("\\W+", (dft.1$text[i])), length) + 1
 }
 
 
 
-dft.2 <- dft.1 %>% select(text,favoriteCount,retweetCount,Sentiment_Score, Popularity_Score, created)
+dft.1 <- dft.1 %>% select(text,favoriteCount,retweetCount,Sentiment_Score, Popularity_Score, created)

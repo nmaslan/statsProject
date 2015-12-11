@@ -2,6 +2,7 @@ require(twitteR)
 require(qdap)
 require(dplyr)
 require(stringr)
+require(randomForest)
 
 load("statsProject/Tweets/tweets(11-14-15).save")
 load("statsProject/Tweets/tweets(11-15-15).save")
@@ -29,22 +30,22 @@ dft11 <- twListToDF(tweets112615)
 
 dft.1 <- rbind(dft1,dft2,dft3,dft4,dft5,dft6,dft7,dft8,dft9,dft10,dft11)
 
-dft.1 <- c(dft.1$text,dft.1$favoriteCount,dft.1$retweetCount,dft.1$created)
+df.2 <- dft.1 %>% select(text,favoriteCount,retweetCount,created)
 
 #Code taken from https://sites.google.com/site/miningtwitter/questions/sentiment/sentiment
 
-dft.1$text = gsub("(RT|via)((?:\\b\\W*@\\w+)+)", "", dft.1$text)
+df.2$text = gsub("(RT|via)((?:\\b\\W*@\\w+)+)", "", df.2$text)
 # remove at people
-dft.1$text = gsub("@\\w+", "", dft.1$text)
+df.2$text = gsub("@\\w+", "", df.2$text)
 # remove punctuation
-dft.1$text = gsub("[[:punct:]]", "", dft.1$text)
+df.2$text = gsub("[[:punct:]]", "", df.2$text)
 # remove numbers
-dft.1$text = gsub("[[:digit:]]", "", dft.1$text)
+df.2$text = gsub("[[:digit:]]", "", df.2$text)
 # remove html links
-dft.1$text = gsub("http\\w+", "", dft.1$text)
+df.2$text = gsub("http\\w+", "", df.2$text)
 # remove unnecessary spaces
-dft.1$text = gsub("[ \t]{2,}", "", dft.1$text)
-dft.1$text = gsub("^\\s+|\\s+$", "", dft.1$text)
+df.2$text = gsub("[ \t]{2,}", "", df.2$text)
+df.2$text = gsub("^\\s+|\\s+$", "", df.2$text)
 
 #Sentiment Analysis 
 
@@ -92,7 +93,7 @@ passiveScore <- function(sentence, passiveTerms){
   wordList <- str_split(sentence, '\\s+')
   words <- unlist(wordList)
   #Match positive and negative Terms 
-  posMatches <- match(words, animalTerms)
+  posMatches <- match(words, passiveTerms)
   # Sum up the matches 
   posMatches <- sum(!is.na(posMatches))
   #score <- c(vNegMatches, negMatches, posMatches, vPosMatches)
@@ -165,7 +166,7 @@ impersonalScore <- function(sentence, personalTerms){
 
 #Animal Analysis
 
-animal_list <- read.delim(file= '~/math154/statsProject/statsProject-master/animals.txt', header=FALSE, stringsAsFactors = FALSE)
+animal_list <- read.delim(file= '~/statsProject/animals.txt', header=FALSE, stringsAsFactors = FALSE)
 
 animalScore <- function(sentence, animalTerms){
   initial_sentence <- sentence
@@ -191,32 +192,128 @@ animalScore <- function(sentence, animalTerms){
   return(final_score)
 }
 
+isAnimal <- c(animal_list$V1)
+isAnimal <- tolower(isAnimal)
+
+geo_list <- read.delim(file= '~/statsProject/geo_words.txt', header=FALSE, stringsAsFactors = FALSE)
+geoScore <- function(sentence, Terms){
+  initial_sentence <- sentence
+  sentence <- gsub("[[:punct:]]","", sentence)
+  sentence <- gsub("[[:cntrl:]]","", sentence)
+  sentence <- gsub("\\d+","", sentence)
+  sentence <- tolower(sentence)
+  wordList <- str_split(sentence, '\\s+')
+  words <- unlist(wordList)
+  #Match positive and negative Terms 
+  posMatches <- match(words, Terms)
+  # Sum up the matches 
+  posMatches <- sum(!is.na(posMatches))
+  #score <- c(vNegMatches, negMatches, posMatches, vPosMatches)
+  # Add rows 
+  #newrow <- c(initial_sentence, score)
+  #final_scores <- rbind(final_scores, newrow)
+  if(posMatches > 0){
+    final_score <- 1
+  } else {
+    final_score <- 0
+  }
+  return(final_score)
+}
+
+isGeo <- c(geo_list$V1)
+isGeo <- tolower(isGeo) 
+
+
+photo_list <- read.delim(file= '~/statsProject/photo.txt', header=FALSE, stringsAsFactors = FALSE)
+photoScore <- function(sentence, Terms){
+  initial_sentence <- sentence
+  sentence <- gsub("[[:punct:]]","", sentence)
+  sentence <- gsub("[[:cntrl:]]","", sentence)
+  sentence <- gsub("\\d+","", sentence)
+  sentence <- tolower(sentence)
+  wordList <- str_split(sentence, '\\s+')
+  words <- unlist(wordList)
+  #Match positive and negative Terms 
+  posMatches <- match(words, Terms)
+  # Sum up the matches 
+  posMatches <- sum(!is.na(posMatches))
+  #score <- c(vNegMatches, negMatches, posMatches, vPosMatches)
+  # Add rows 
+  #newrow <- c(initial_sentence, score)
+  #final_scores <- rbind(final_scores, newrow)
+  if(posMatches > 0){
+    final_score <- 1
+  } else {
+    final_score <- 0
+  }
+  return(posMatches)
+}
+
+isPhoto <- c(photo_list$V1)
+isPhoto <- tolower(isPhoto) 
+
+for(i in 1:nrow(df.2)){
+  df.2$photo_score[i] <- photoScore(df.2$caption[i],isPhoto)
+}
+
+
 
 
 for(i in 1:nrow(dft.1)){
-  dft.1$Sentiment_Score[i] <- sentimentScore(dft.1$text[i],vNegTerms,negTerms,posTerms,vPosTerms)
+  df.2$Sentiment_Score[i] <- sentimentScore(df.2$text[i],vNegTerms,negTerms,posTerms,vPosTerms)
 }    
 
-for(i in 1:nrow(dft.1)){
-  dft.1$Popularity_Score[i] <- dft.1$favoriteCount[i] + 2*dft.1$retweetCount[i]
-}    
+for(i in 1:nrow(df.2)){
+  df.2$Popularity_Score[i] <- df.2$favoriteCount[i] + 2*df.2$retweetCount[i]
+} 
 
-for(i in 1:nrow(dft.1)){
-  dft.1$Word_Count[i] <- word.count(dft.1$text[i])
+for(i in 1:nrow(df.2)){
+  if(df.2$Popularity_Score[i] >= 1000){
+    df.2$isPopular[i] = 1
+  } else {
+    df.2$isPopular[i] = 0
+  }
 }
 
-for(i in 1:nrow(df.1)){
-  df.1$passive_score[i] <- passiveScore(df.2$caption[i],passive_list)
+
+df.2$isPopular <- as.factor(df.2$isPopular)
+
+for(i in 1:nrow(df.2)){
+  df.2$Word_Count[i] <- sapply(gregexpr("\\W+", (df.2$text[i])), length) + 1
 }
 
-for(i in 1:nrow(df.1)){
-  df.1$personal_score[i] <- personalScore(df.2$caption[i],personal_list)
+for(i in 1:nrow(df.2)){
+  df.2$passive_score[i] <- passiveScore(df.2$caption[i],passive_list)
 }
 
-for(i in 1:nrow(df.1)){
-  df.1$animal_score[i] <- animalScore(df.2$caption[i],isAnimal)
+for(i in 1:nrow(df.2)){
+  df.2$personal_score[i] <- personalScore(df.2$caption[i],personal_list)
 }
 
-for(i in 1:nrow(df.1)){
-  df.1$impersonal_score[i] <- impersonalScore(df.2$caption[i],impersonal_list)
+for(i in 1:nrow(df.2)){
+  df.2$animal_score[i] <- animalScore(df.2$caption[i],isAnimal)
 }
+
+for(i in 1:nrow(df.2)){
+  df.2$impersonal_score[i] <- impersonalScore(df.2$caption[i],impersonal_list)
+}
+
+for(i in 1:nrow(df.2)){
+  df.2$geo_score[i] <- geoScore(df.2$caption[i],isGeo)
+}
+
+for(i in 1:nrow(df.2)){
+  if(as.numeric(substr(df.2$created[i],11,13))>=12){
+    df.2$Time[i] <- "0"
+  } 
+  else{
+    df.2$Time[i] <- "1"
+  }
+}
+
+
+df.2$animal_score <- as.factor(df.2$animal_score)
+df.2$geo_score <- as.factor(df.2$geo_score)
+df.2$photo_score <- as.factor(df.2$photo_score)
+df.2 <- df.2 %>% select(-text,-created,-Popularity_Score, -favoriteCount, -retweetCount)
+model1 <- randomForest(isPopular~.,data=df.2, mtry=9, importance=TRUE)
