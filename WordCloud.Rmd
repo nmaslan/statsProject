@@ -13,6 +13,18 @@ library(gsubfn)
 library(plyr)
 library(koRpus)
 library(wordcloud)
+library(SnowballC)
+library(XML)
+library(ggplot2)
+library(graph)
+library(Rgraphviz)
+
+#run this: (from: https://www.bioconductor.org/packages/3.3/bioc/html/Rgraphviz.html)
+#source("https://bioconductor.org/biocLite.R")
+#biocLite("Rgraphviz")
+
+
+#source: http://alstatr.blogspot.com/2014/03/r-text-mining-on-twitter-prayformh370.html
 
 #import df.2
 read.csv("df.2.csv")
@@ -27,17 +39,46 @@ corpus <- Corpus(post_source)
 #cleaning - remove stopwords
 corpus <- tm_map(corpus, removeWords, stopwords("english"))
 
+#create better stopwords list
+#source: http://alstatr.blogspot.com/2014/03/r-text-mining-on-twitter-prayformh370.html
+df1 <- readHTMLTable('https://twitter-sentiment-analysis.googlecode.com/svn-history/r51/trunk/files/stopwords.txt')
+mystopwords = read.table("mystopwords.txt")
+df.stop <- data.frame(mystopwords)
+
 #Making a document-term matrix
-dtm <- DocumentTermMatrix(corpus)
-dtm2 <- as.matrix(dtm)
+#dtm <- DocumentTermMatrix(corpus)
+#dtm2 <- as.matrix(dtm)
 
-#finding frequency of terms
-frequency <- colSums(dtm2)
-frequency <- sort(frequency, decreasing=TRUE)
+dtm3 <- TermDocumentMatrix(corpus, control = list(removePunctuation = TRUE, stopWords = c("the", stopwords('english')), removeNumbers = TRUE, tolower = TRUE))
+dtm4 <- as.matrix(dtm3)
 
-words <- names(frequency)
-wordcloud(words[1:50], frequency[1:50])
+#find frequency of terms in decreasing order
+word_freqs = sort(rowSums(dtm4), decreasing = TRUE)
+#create data frame with words and their frequencies
+dm = data.frame(word = names(word_freqs), freq = word_freqs)
+#remove "the"
+dm <- dm[-c(1),]
 
-#look at word lcouds of popularity 
-df.2 <- arrange(df.2, desc(Popularity_Score))
+#create word cloud
+wordcloud(dm$word, dm$freq, random.order = FALSE, min.freq = 3, colors = brewer.pal(8, "Dark2"))
+
+
+
+#inspect frequent words
+#source: http://www.rdatamining.com/docs/text-mining-with-r-of-twitter-data-analysis
+freq.terms <- findFreqTerms(dtm3, lowfreq = 25)
+
+term.freq <- rowSums(as.matrix(dtm3))
+term.freq <- subset(term.freq, term.freq >= 25)
+df.terms <- data.frame(term = names(term.freq), freq = term.freq)
+
+ggplot(df.terms, aes(x = term, y = freq)) + geom_bar(stat = "identity") +
+xlab("Terms") + ylab("Count") + coord_flip()
+
+
+#which words are associated with "follow"
+#(doesn't work)
+#findAssocs(dtm3, "follow", 0.003)
+
+#plot(dtm3, term = freq.terms, corThreshold = 20, weighting = T)
 
