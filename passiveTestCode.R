@@ -29,4 +29,3 @@ passiveScore <- function(sentence, passiveTerms){
 for(i in 1:nrow(df.2)){
   df.2$passive_score[i] <- passiveScore(df.2$caption[i],passive_list)
 }
-plot(df.2$passsive_score,df.2$Popularity_Score)

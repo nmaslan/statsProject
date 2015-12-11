@@ -1,8 +1,8 @@
 require(stringr)
 
-personal_list <- c("i","me","my","we","ours","our","weve","ive","mine","myself")
+impersonal_list <- c("i","me","my","we","ours","our","weve","ive","mine","myself")
 
-personalScore <- function(sentence, personalTerms){
+impersonalScore <- function(sentence, personalTerms){
   initial_sentence <- sentence
   sentence <- gsub("[[:punct:]]","", sentence)
   sentence <- gsub("[[:cntrl:]]","", sentence)
@@ -26,11 +26,8 @@ personalScore <- function(sentence, personalTerms){
   return(final_score)
 }
 
-isAnimal <- c(animal_list$V1)
-isAnimal <- tolower(isAnimal)
 
-#Add in animal scores 
+#Add in impersonal scores 
 for(i in 1:nrow(df.2)){
-  df.2$animal_score[i] <- animalScore(df.2$caption[i],isAnimal)
+  df.2$impersonal_score[i] <- impersonalScore(df.2$caption[i],impersonal_list)
 }
-plot(df.2$animal_score,df.2$Popularity_Score)

@@ -26,11 +26,7 @@ personalScore <- function(sentence, personalTerms){
   return(final_score)
 }
 
-isAnimal <- c(animal_list$V1)
-isAnimal <- tolower(isAnimal)
-
-#Add in animal scores 
+#Add in personal scores 
 for(i in 1:nrow(df.2)){
-  df.2$animal_score[i] <- animalScore(df.2$caption[i],isAnimal)
+  df.2$personal_score[i] <- personalScore(df.2$caption[i],personal_list)
 }
-plot(df.2$animal_score,df.2$Popularity_Score)
