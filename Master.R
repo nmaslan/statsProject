@@ -253,7 +253,7 @@ isPhoto <- c(photo_list$V1)
 isPhoto <- tolower(isPhoto) 
 
 for(i in 1:nrow(df.2)){
-  df.2$photo_score[i] <- photoScore(df.2$caption[i],isPhoto)
+  df.2$photo_score[i] <- photoScore(df.2$text[i],isPhoto)
 }
 
 
@@ -283,23 +283,23 @@ for(i in 1:nrow(df.2)){
 }
 
 for(i in 1:nrow(df.2)){
-  df.2$passive_score[i] <- passiveScore(df.2$caption[i],passive_list)
+  df.2$passive_score[i] <- passiveScore(df.2$text[i],passive_list)
 }
 
 for(i in 1:nrow(df.2)){
-  df.2$personal_score[i] <- personalScore(df.2$caption[i],personal_list)
+  df.2$personal_score[i] <- personalScore(df.2$text[i],personal_list)
 }
 
 for(i in 1:nrow(df.2)){
-  df.2$animal_score[i] <- animalScore(df.2$caption[i],isAnimal)
+  df.2$animal_score[i] <- animalScore(df.2$text[i],isAnimal)
 }
 
 for(i in 1:nrow(df.2)){
-  df.2$impersonal_score[i] <- impersonalScore(df.2$caption[i],impersonal_list)
+  df.2$impersonal_score[i] <- impersonalScore(df.2$text[i],impersonal_list)
 }
 
 for(i in 1:nrow(df.2)){
-  df.2$geo_score[i] <- geoScore(df.2$caption[i],isGeo)
+  df.2$geo_score[i] <- geoScore(df.2$text[i],isGeo)
 }
 
 for(i in 1:nrow(df.2)){
@@ -315,5 +315,13 @@ for(i in 1:nrow(df.2)){
 df.2$animal_score <- as.factor(df.2$animal_score)
 df.2$geo_score <- as.factor(df.2$geo_score)
 df.2$photo_score <- as.factor(df.2$photo_score)
+df.2$passive_score <- as.factor(df.2$passive_score)
+df.2$personal_score <- as.factor(df.2$personal_score)
+df.2$impersonal_score <- as.factor(df.2$impersonal_score)
 df.2 <- df.2 %>% select(-text,-created,-Popularity_Score, -favoriteCount, -retweetCount)
 model1 <- randomForest(isPopular~.,data=df.2, mtry=9, importance=TRUE)
+model2 <- randomForest(isPopular~.,data=df.2, mtry=8, importance=TRUE)
+model1
+model2
+importance(model1)
+importance(model2)

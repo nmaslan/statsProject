@@ -32,7 +32,7 @@ for(i in 1:nrow(df.2)){
 plot(df.2$geo_score,df.2$Popularity_Score)
 
 photo_list <- read.delim(file= '~/math154/statsProject/statsProject-master/photo.txt', header=FALSE, stringsAsFactors = FALSE)
-geoScore <- function(sentence, animalTerms){
+photoScore <- function(sentence, animalTerms){
   initial_sentence <- sentence
   sentence <- gsub("[[:punct:]]","", sentence)
   sentence <- gsub("[[:cntrl:]]","", sentence)

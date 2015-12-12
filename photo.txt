@@ -3,3 +3,4 @@ photography
 pic
 picoftheday
 photooftheday
+photos
