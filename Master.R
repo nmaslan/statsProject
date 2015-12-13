@@ -324,5 +324,3 @@ model2
 importance(model1)
 importance(model2)
 
-model1a <- tree(Popularity_Score~.,data=df.3)
-model2a <- randomForest(Popularity_Score~.,data=df.3, mtry=8, importance=TRUE)

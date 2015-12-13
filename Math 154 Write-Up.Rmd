@@ -1,0 +1,14 @@
+---
+title: "The Relationship between Sentiment and Text Analysis, and Popularity on Twitter"
+author: "Isaiah Boone"
+date: "December 13, 2015"
+output: pdf_document
+---
+
+#Our Topic
+
+#Why People Should Care
+
+#What we did
+
+#How can this be useful
