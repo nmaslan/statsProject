@@ -3,6 +3,7 @@ require(qdap)
 require(dplyr)
 require(stringr)
 require(randomForest)
+require(tree)
 
 load("statsProject/Tweets/tweets(11-14-15).save")
 load("statsProject/Tweets/tweets(11-15-15).save")
@@ -268,13 +269,9 @@ for(i in 1:nrow(df.2)){
 } 
 
 for(i in 1:nrow(df.2)){
-  if(df.2$Popularity_Score[i] >= 1000){
-    df.2$isPopular[i] = 1
-  } else {
-    df.2$isPopular[i] = 0
-  }
+  df.2$isPopular[i]  <- ifelse(df.2$Popularity_Score[i] >= quantile(df.2$Popularity_Score,0.75),"Popular",
+                               ifelse(df.2$Popularity_Score[i] < quantile(df.2$Popularity_Score,0.25),"UnPopular","Average"))
 }
-
 
 df.2$isPopular <- as.factor(df.2$isPopular)
 
@@ -318,10 +315,14 @@ df.2$photo_score <- as.factor(df.2$photo_score)
 df.2$passive_score <- as.factor(df.2$passive_score)
 df.2$personal_score <- as.factor(df.2$personal_score)
 df.2$impersonal_score <- as.factor(df.2$impersonal_score)
-df.2 <- df.2 %>% select(-text,-created,-Popularity_Score, -favoriteCount, -retweetCount)
+df.3 <- df.2 %>% select(-text,-created,-isPopular,-favoriteCount, -retweetCount)
+df.2 <- df.2 %>% select(-Popularity_Score, -favoriteCount, -retweetCount)
 model1 <- randomForest(isPopular~.,data=df.2, mtry=9, importance=TRUE)
-model2 <- randomForest(isPopular~.,data=df.2, mtry=8, importance=TRUE)
+model2 <- randomForest(isPopular~.,data=df.2, mtry=7, importance=TRUE)
 model1
 model2
 importance(model1)
 importance(model2)
+
+model1a <- tree(Popularity_Score~.,data=df.3)
+model2a <- randomForest(Popularity_Score~.,data=df.3, mtry=8, importance=TRUE)
