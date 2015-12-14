@@ -53,11 +53,28 @@ df.2$text = gsub("^\\s+|\\s+$", "", df.2$text)
 afinn_list <- read.delim(file= '~/statsProject/AFINN-111.txt', header=FALSE, stringsAsFactors = FALSE)
 names(afinn_list) <- c('word', 'score')
 afinn_list$word <- tolower(afinn_list$word)
+negWords <- read.delim(file= '~/statsProject/Negative Words.txt', header=FALSE, stringsAsFactors = FALSE, colClasses = c("factor"))
+posWords <- read.delim(file= '~/statsProject/Positive Words.txt', header=FALSE, stringsAsFactors = FALSE)
+negWords <- data.frame(negWords)
+for(i in 1:nrow(negWords)){
+  negWords$words[i] <- toString(negWords$V1[i])
+}
+negWords <- negWords$words
+negWords <- substr(negWords,1,nchar(negWords)-2)
+posWords <- data.frame(posWords)
+for(i in 1:nrow(posWords)){
+  posWords$words[i] <- toString(posWords$V1[i])
+}
+posWords <- posWords$words
+posWords <- substr(posWords,1,nchar(posWords)-2)
 
 vNegTerms <- afinn_list$word[afinn_list$score==-5 | afinn_list$score==-4]
-negTerms <- c(afinn_list$word[afinn_list$score==-3 | afinn_list$score==-2 | afinn_list$score==-1])
-posTerms <- c(afinn_list$word[afinn_list$score==3 | afinn_list$score==2 | afinn_list$score==1])
+negTerms <- c(afinn_list$word[afinn_list$score==-3 | afinn_list$score==-2 | afinn_list$score==-1],negWords)
+posTerms <- c(afinn_list$word[afinn_list$score==3 | afinn_list$score==2 | afinn_list$score==1],posWords)
 vPosTerms <- afinn_list$word[afinn_list$score==5 | afinn_list$score==4]
+
+negTerms <- unique(negTerms)
+posTerms <- unique(posTerms)
 
 
 sentimentScore <- function(sentence, vNegTerms, negTerms, posTerms, vPosTerms){
